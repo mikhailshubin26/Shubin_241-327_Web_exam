@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% from "_book_fields.html" import book_fields %}
+
+{% block title %}{% if mode == 'add' %}Добавление книги{% else %}Редактирование книги{% endif %} — Электронная библиотека{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css">
+{% endblock %}
+
+{% block content %}
+<h3 class="mb-3">{% if mode == 'add' %}Добавление книги{% else %}Редактирование книги «{{ book.title }}»{% endif %}</h3>
+
+<form method="post" enctype="multipart/form-data" novalidate>
+    {{ form.hidden_tag() }}
+
+    {{ book_fields(form) }}
+
+    {% if mode == 'add' %}
+    <div class="mb-3">
+        {{ form.cover.label(class="form-label") }}
+        {{ form.cover(class="form-control") }}
+        {% for error in form.cover.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+    </div>
+    {% endif %}
+
+    {{ form.submit(class="btn btn-primary") }}
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
+<script>
+    new EasyMDE({ element: document.getElementById('description') });
+</script>
+{% endblock %}

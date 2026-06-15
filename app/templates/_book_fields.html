@@ -1,0 +1,44 @@
+{% macro book_fields(form) %}
+<div class="mb-3">
+    {{ form.title.label(class="form-label") }}
+    {{ form.title(class="form-control") }}
+    {% for error in form.title.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+</div>
+
+<div class="mb-3">
+    {{ form.description.label(class="form-label") }}
+    {{ form.description(class="form-control", id="description") }}
+    {% for error in form.description.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+</div>
+
+<div class="row">
+    <div class="col-md-4 mb-3">
+        {{ form.year.label(class="form-label") }}
+        {{ form.year(class="form-control") }}
+        {% for error in form.year.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+    </div>
+    <div class="col-md-4 mb-3">
+        {{ form.publisher.label(class="form-label") }}
+        {{ form.publisher(class="form-control") }}
+        {% for error in form.publisher.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+    </div>
+    <div class="col-md-4 mb-3">
+        {{ form.pages.label(class="form-label") }}
+        {{ form.pages(class="form-control") }}
+        {% for error in form.pages.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+    </div>
+</div>
+
+<div class="mb-3">
+    {{ form.author.label(class="form-label") }}
+    {{ form.author(class="form-control") }}
+    {% for error in form.author.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+</div>
+
+<div class="mb-3">
+    {{ form.genres.label(class="form-label") }}
+    {{ form.genres(class="form-select", multiple="multiple", size="6") }}
+    {% for error in form.genres.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+    <div class="form-text">Удерживайте Ctrl (Cmd) для выбора нескольких жанров.</div>
+</div>
+{% endmacro %}

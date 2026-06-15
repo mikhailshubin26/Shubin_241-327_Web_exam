@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block title %}Главная — Электронная библиотека{% endblock %}
+
+{% block content %}
+
+{% if popular_books %}
+<section class="mb-4">
+    <h4>Популярные книги</h4>
+    <div class="d-flex flex-wrap gap-2">
+        {% for book, views_count in popular_books %}
+        <a href="{{ url_for('books.view', book_id=book.id) }}" class="badge text-bg-secondary text-decoration-none p-2">
+            {{ book.title }} <span class="opacity-75">({{ views_count }} просм.)</span>
+        </a>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+{% if recent_books %}
+<section class="mb-4">
+    <h4>Недавно просмотренные книги</h4>
+    <div class="d-flex flex-wrap gap-2">
+        {% for book, last_view in recent_books %}
+        <a href="{{ url_for('books.view', book_id=book.id) }}" class="badge text-bg-light text-dark border text-decoration-none p-2">
+            {{ book.title }}
+        </a>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<h4 class="mb-3">Список книг</h4>
+
+<div class="row g-3">
+    {% for book in books %}
+    <div class="col-12">
+        <div class="card flex-md-row">
+            {% if book.cover %}
+            <img src="{{ url_for('static', filename='uploads/covers/' + book.cover.filename) }}"
+                 class="book-cover-thumb m-2" alt="Обложка книги {{ book.title }}">
+            {% endif %}
+            <div class="card-body">
+                <h5 class="card-title">
+                    <a href="{{ url_for('books.view', book_id=book.id) }}" class="text-decoration-none">{{ book.title }}</a>
+                </h5>
+                <p class="card-text mb-1">
+                    {% for genre in book.genres %}
+                        <span class="badge text-bg-info">{{ genre.name }}</span>
+                    {% endfor %}
+                </p>
+                <p class="card-text">
+                    <strong>Год:</strong> {{ book.year }} &middot;
+                    <strong>Средняя оценка:</strong>
+                    {% if book.average_rating is not none %}
+                        {{ "%.1f"|format(book.average_rating) }}
+                    {% else %}
+                        нет оценок
+                    {% endif %}
+                    &middot;
+                    <strong>Рецензий:</strong> {{ book.review_count }}
+                </p>
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('books.view', book_id=book.id) }}" class="btn btn-sm btn-outline-primary">Просмотр</a>
+                    {% if current_user.is_authenticated and current_user.has_role('admin', 'moderator') %}
+                    <a href="{{ url_for('books.edit', book_id=book.id) }}" class="btn btn-sm btn-outline-secondary">Редактировать</a>
+                    {% endif %}
+                    {% if current_user.is_authenticated and current_user.has_role('admin') %}
+                    <button type="button" class="btn btn-sm btn-outline-danger"
+                            data-bs-toggle="modal" data-bs-target="#deleteModal"
+                            data-book-id="{{ book.id }}" data-book-title="{{ book.title }}">
+                        Удалить
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <p>Список книг пуст.</p>
+    {% endfor %}
+</div>
+
+{% if pagination.pages > 1 %}
+<nav class="mt-4">
+    <ul class="pagination justify-content-center">
+        <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('main.index', page=pagination.prev_num) if pagination.has_prev else '#' }}">&laquo;</a>
+        </li>
+        {% for p in pagination.iter_pages() %}
+            {% if p %}
+            <li class="page-item {% if p == pagination.page %}active{% endif %}">
+                <a class="page-link" href="{{ url_for('main.index', page=p) }}">{{ p }}</a>
+            </li>
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">…</span></li>
+            {% endif %}
+        {% endfor %}
+        <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('main.index', page=pagination.next_num) if pagination.has_next else '#' }}">&raquo;</a>
+        </li>
+    </ul>
+</nav>
+{% endif %}
+
+{% if current_user.is_authenticated and current_user.has_role('admin') %}
+<a href="{{ url_for('books.add') }}" class="btn btn-primary mt-3">Добавить книгу</a>
+{% endif %}
+
+<!-- Модальное окно подтверждения удаления -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="deleteForm" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title">Удаление книги</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="deleteModalText">Вы уверены, что хотите удалить книгу?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Нет</button>
+                    <button type="submit" class="btn btn-danger">Да</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const deleteModal = document.getElementById('deleteModal');
+deleteModal.addEventListener('show.bs.modal', function (event) {
+    const button = event.relatedTarget;
+    const bookId = button.getAttribute('data-book-id');
+    const bookTitle = button.getAttribute('data-book-title');
+    document.getElementById('deleteModalText').textContent = `Вы уверены, что хотите удалить книгу «${bookTitle}»?`;
+    document.getElementById('deleteForm').action = `/books/${bookId}/delete`;
+});
+</script>
+{% endblock %}

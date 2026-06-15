@@ -1,0 +1,9 @@
+.claude/
+.idea/
+venv/
+.venv/
+libraby.db
+__pycache__/
+*.pyc
+README.md
+check.md

@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}Статистика — Электронная библиотека{% endblock %}
+
+{% block content %}
+<h3 class="mb-3">Статистика</h3>
+
+{% set base_args = request.args.to_dict() %}
+
+<ul class="nav nav-tabs mb-3">
+    <li class="nav-item">
+        <a class="nav-link {% if tab != 'views' %}active{% endif %}"
+           href="{{ url_for('stats.index', **dict(base_args, tab='log')) }}">Журнал действий пользователей</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {% if tab == 'views' %}active{% endif %}"
+           href="{{ url_for('stats.index', **dict(base_args, tab='views')) }}">Статистика просмотра книг</a>
+    </li>
+</ul>
+
+{% if tab != 'views' %}
+<div class="d-flex justify-content-end mb-2">
+    <a href="{{ url_for('stats.export_log') }}" class="btn btn-outline-success btn-sm">Экспорт в CSV</a>
+</div>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>№</th>
+            <th>ФИО пользователя</th>
+            <th>Книга</th>
+            <th>Дата и время просмотра</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for view, user, book in log_pagination.items %}
+        <tr>
+            <td>{{ log_offset + loop.index }}</td>
+            <td>{{ user.full_name if user else "Неаутентифицированный пользователь" }}</td>
+            <td><a href="{{ url_for('books.view', book_id=book.id) }}">{{ book.title }}</a></td>
+            <td>{{ view.viewed_at.strftime('%d.%m.%Y %H:%M:%S') }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="4">Записей не найдено.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% if log_pagination.pages > 1 %}
+<nav>
+    <ul class="pagination justify-content-center">
+        <li class="page-item {% if not log_pagination.has_prev %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('stats.index', **dict(base_args, tab='log', log_page=log_pagination.prev_num)) if log_pagination.has_prev else '#' }}">&laquo;</a>
+        </li>
+        {% for p in log_pagination.iter_pages() %}
+            {% if p %}
+            <li class="page-item {% if p == log_pagination.page %}active{% endif %}">
+                <a class="page-link" href="{{ url_for('stats.index', **dict(base_args, tab='log', log_page=p)) }}">{{ p }}</a>
+            </li>
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">…</span></li>
+            {% endif %}
+        {% endfor %}
+        <li class="page-item {% if not log_pagination.has_next %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('stats.index', **dict(base_args, tab='log', log_page=log_pagination.next_num)) if log_pagination.has_next else '#' }}">&raquo;</a>
+        </li>
+    </ul>
+</nav>
+{% endif %}
+
+{% else %}
+
+<form method="get" class="row gx-2 gy-2 align-items-end mb-3">
+    <input type="hidden" name="tab" value="views">
+    <div class="col-auto">
+        <label class="form-label">Дата от</label>
+        <input type="date" name="date_from" class="form-control" value="{{ date_from }}">
+    </div>
+    <div class="col-auto">
+        <label class="form-label">Дата до</label>
+        <input type="date" name="date_to" class="form-control" value="{{ date_to }}">
+    </div>
+    <div class="col-auto">
+        <button type="submit" class="btn btn-primary">Применить</button>
+    </div>
+</form>
+
+<div class="d-flex justify-content-end mb-2">
+    <a href="{{ url_for('stats.export_views', date_from=date_from, date_to=date_to) }}" class="btn btn-outline-success btn-sm">Экспорт в CSV</a>
+</div>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>№</th>
+            <th>Название книги</th>
+            <th>Количество просмотров</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for title, views_count in views_pagination.items %}
+        <tr>
+            <td>{{ views_offset + loop.index }}</td>
+            <td>{{ title }}</td>
+            <td>{{ views_count }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="3">Записей не найдено.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% if views_pagination.pages > 1 %}
+<nav>
+    <ul class="pagination justify-content-center">
+        <li class="page-item {% if not views_pagination.has_prev %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('stats.index', **dict(base_args, tab='views', views_page=views_pagination.prev_num)) if views_pagination.has_prev else '#' }}">&laquo;</a>
+        </li>
+        {% for p in views_pagination.iter_pages() %}
+            {% if p %}
+            <li class="page-item {% if p == views_pagination.page %}active{% endif %}">
+                <a class="page-link" href="{{ url_for('stats.index', **dict(base_args, tab='views', views_page=p)) }}">{{ p }}</a>
+            </li>
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">…</span></li>
+            {% endif %}
+        {% endfor %}
+        <li class="page-item {% if not views_pagination.has_next %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('stats.index', **dict(base_args, tab='views', views_page=views_pagination.next_num)) if views_pagination.has_next else '#' }}">&raquo;</a>
+        </li>
+    </ul>
+</nav>
+{% endif %}
+
+{% endif %}
+{% endblock %}
